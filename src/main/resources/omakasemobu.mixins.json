@@ -1,0 +1,15 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "be.meiji.omakasemobu.mixin",
+  "compatibilityLevel": "JAVA_21",
+  "mixins": [
+    "ChunkRegionMixin",
+    "ServerWorldMixin",
+    "SpawnHelperMixin"
+  ],
+  "client": [],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}

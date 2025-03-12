@@ -1,0 +1,49 @@
+{
+  "schemaVersion": 1,
+  "id": "omakasemobu",
+  "version": "${version}",
+
+  "name": "Mob Randomizer",
+  "description": "Shuffled mob spawns",
+  "authors" : [
+    {
+      "name" : "MeijiRestored",
+      "contact" : {
+        "homepage" : "https://hainaut.xyz"
+      }
+    }
+  ],
+  "contact" : {
+    "homepage" : "https://github.com/MeijiRestored/MobRandomizer",
+    "sources" : "https://github.com/MeijiRestored/MobRandomizer",
+    "issues" : "https://github.com/MeijiRestored/MobRandomizer/issues"
+  },
+
+  "license": "MIT",
+  "icon": "mod_icon.png",
+
+  "environment": "*",
+  "entrypoints": {
+    "main": [
+      "be.meiji.omakasemobu.MobRandomizerMod"
+    ]
+  },
+  "mixins": [
+    "omakasemobu.mixins.json"
+  ],
+
+  "custom" : {
+    "modmenu" : {
+      "links" : {
+        "modmenu.github_releases" : "https://github.com/MeijiRestored/MobRandomizer/releases"
+      }
+    }
+  },
+
+  "depends": {
+    "fabric-api": ">=0.118.5+1.21.4",
+    "fabricloader": ">=0.16.10",
+    "minecraft": ["1.21.4"],
+    "java": ">=21"
+  }
+}
