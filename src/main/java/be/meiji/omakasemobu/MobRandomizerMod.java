@@ -34,7 +34,6 @@ public class MobRandomizerMod implements ModInitializer {
       EntityType.ZOMBIE_HORSE
   };
 
-  private static final Map<Integer, ArrayList<Integer>> ALLOWED = new HashMap<>();
   private static final Map<Integer, Integer> RANDOMIZER = new HashMap<>();
   private static final Map<Integer, Integer> COMPLIMENT = new HashMap<>();
 
@@ -91,7 +90,7 @@ public class MobRandomizerMod implements ModInitializer {
   }
 
   private void onServerTick(MinecraftServer server) {
-    if (server.getTicks() % 10 == 0) {
+    if (server.getTicks() % 20 == 0) {
       for (ServerWorld world : server.getWorlds()) {
         for (ServerPlayerEntity player : world.getPlayers()) {
           ArrayList<Entity> entities = (ArrayList<Entity>) world.getEntitiesByClass(Entity.class,
@@ -100,15 +99,13 @@ public class MobRandomizerMod implements ModInitializer {
               entity -> !entity.getCommandTags().contains(TAG_ID) && entity.isAlive()
                         && entity instanceof MobEntity);
           for (Entity entity : entities) {
-            if (entity == null || entity.getCommandTags().contains(TAG_ID)
-                || !MobRandomizerMod.canRandomize(entity.getType())) {
-              return;
+            if (entity != null && !entity.getCommandTags().contains(TAG_ID)
+                && MobRandomizerMod.canRandomize(entity.getType())) {
+              Entity newEntity = createRandomizedEntity(world, entity);
+
+              world.spawnEntity(newEntity);
+              entity.discard();
             }
-
-            Entity newEntity = createRandomizedEntity(world, entity);
-
-            world.spawnEntity(newEntity);
-            entity.discard();
           }
         }
       }
@@ -130,26 +127,6 @@ public class MobRandomizerMod implements ModInitializer {
         available.add(id);
       }
     });
-
-    for (int id : ALLOWED.keySet()) {
-      if (ids.contains(id)) {
-        ArrayList<Integer> mappings = new ArrayList<>(ALLOWED.get(id));
-        mappings.retainAll(available);
-        if (mappings.isEmpty()) {
-          LOGGER.error("Entity {} does not have a valid mapping!",
-              Registries.ENTITY_TYPE.getId(Registries.ENTITY_TYPE.get(id)));
-          continue;
-        }
-
-        int mapTo = RANDOM.nextInt(mappings.size());
-        RANDOMIZER.put(mappings.get(mapTo), id);
-        COMPLIMENT.put(id, mappings.get(mapTo));
-        LOGGER.info("Mapping {} -> {}", Registries.ENTITY_TYPE.get(mappings.get(mapTo)),
-            Registries.ENTITY_TYPE.get(id));
-        available.remove(mappings.get(mapTo));
-        ids.remove((Integer) id);
-      }
-    }
 
     for (int id : ids) {
       if (available.isEmpty()) {
