@@ -7,6 +7,7 @@ import java.util.Map;
 import java.util.Random;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
+import net.fabricmc.fabric.api.event.lifecycle.v1.ServerWorldEvents;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.SpawnGroup;
@@ -26,7 +27,6 @@ public class MobRandomizerMod implements ModInitializer {
   public static final String MOD_ID = "mob_randomizer";
   public static final String TAG_ID = "randomized";
   public static final Logger LOGGER = LoggerFactory.getLogger(MOD_ID);
-  public static final Random RANDOM = new Random();
 
   private static final EntityType<?>[] BLACKLIST = new EntityType<?>[]{
       EntityType.GIANT, EntityType.ENDER_DRAGON,
@@ -89,6 +89,37 @@ public class MobRandomizerMod implements ModInitializer {
     return newEntity;
   }
 
+  private void onWorldLoad(MinecraftServer server, ServerWorld world) {
+    ArrayList<Integer> ids = new ArrayList<>();
+    ArrayList<Integer> available = new ArrayList<>();
+    RANDOMIZER.clear();
+    COMPLIMENT.clear();
+    Random random = new Random(world.getSeed());
+
+    Registries.ENTITY_TYPE.forEach((EntityType<?> entity) -> {
+      if (canRandomize(entity)) {
+        int id = Registries.ENTITY_TYPE.getRawId(entity);
+        ids.add(id);
+        available.add(id);
+      }
+    });
+
+    for (int id : ids) {
+      if (available.isEmpty()) {
+        LOGGER.error("Entity {} does not have a valid mapping!",
+            Registries.ENTITY_TYPE.getId(Registries.ENTITY_TYPE.get(id)));
+        break;
+      }
+
+      int mapTo = random.nextInt(available.size());
+      RANDOMIZER.put(available.get(mapTo), id);
+      COMPLIMENT.put(id, available.get(mapTo));
+      LOGGER.info("Mapping {} -> {}", Registries.ENTITY_TYPE.get(available.get(mapTo)),
+          Registries.ENTITY_TYPE.get(id));
+      available.remove(mapTo);
+    }
+  }
+
   private void onServerTick(MinecraftServer server) {
     if (server.getTicks() % 20 == 0) {
       for (ServerWorld world : server.getWorlds()) {
@@ -117,30 +148,6 @@ public class MobRandomizerMod implements ModInitializer {
   public void onInitialize() {
     ServerTickEvents.END_SERVER_TICK.register(this::onServerTick);
 
-    ArrayList<Integer> ids = new ArrayList<>();
-    ArrayList<Integer> available = new ArrayList<>();
-
-    Registries.ENTITY_TYPE.forEach((EntityType<?> entity) -> {
-      if (canRandomize(entity)) {
-        int id = Registries.ENTITY_TYPE.getRawId(entity);
-        ids.add(id);
-        available.add(id);
-      }
-    });
-
-    for (int id : ids) {
-      if (available.isEmpty()) {
-        LOGGER.error("Entity {} does not have a valid mapping!",
-            Registries.ENTITY_TYPE.getId(Registries.ENTITY_TYPE.get(id)));
-        break;
-      }
-
-      int mapTo = RANDOM.nextInt(available.size());
-      RANDOMIZER.put(available.get(mapTo), id);
-      COMPLIMENT.put(id, available.get(mapTo));
-      LOGGER.info("Mapping {} -> {}", Registries.ENTITY_TYPE.get(available.get(mapTo)),
-          Registries.ENTITY_TYPE.get(id));
-      available.remove(mapTo);
-    }
+    ServerWorldEvents.LOAD.register(this::onWorldLoad);
   }
 }
