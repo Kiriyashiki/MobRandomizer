@@ -2,6 +2,7 @@ package be.meiji.omakasemobu;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
@@ -91,34 +92,40 @@ public class MobRandomizerMod implements ModInitializer {
 
   private void onWorldLoad(MinecraftServer server, ServerWorld world) {
     ArrayList<Integer> ids = new ArrayList<>();
-    ArrayList<Integer> available = new ArrayList<>();
     RANDOMIZER.clear();
     COMPLIMENT.clear();
-    Random random = new Random(world.getSeed());
 
     Registries.ENTITY_TYPE.forEach((EntityType<?> entity) -> {
       if (canRandomize(entity)) {
         int id = Registries.ENTITY_TYPE.getRawId(entity);
         ids.add(id);
-        available.add(id);
       }
     });
 
-    for (int id : ids) {
-      if (available.isEmpty()) {
-        LOGGER.error("Entity {} does not have a valid mapping!",
-            Registries.ENTITY_TYPE.getId(Registries.ENTITY_TYPE.get(id)));
-        break;
-      }
+    Random random = new Random(world.getSeed());
 
-      int mapTo = random.nextInt(available.size());
-      RANDOMIZER.put(available.get(mapTo), id);
-      COMPLIMENT.put(id, available.get(mapTo));
-      LOGGER.info("Mapping {} -> {}", Registries.ENTITY_TYPE.get(available.get(mapTo)),
-          Registries.ENTITY_TYPE.get(id));
-      available.remove(mapTo);
+    Collections.shuffle(ids, random);
+
+    int size = ids.size();
+    for (int i = 0; i + 1 < size; i += 2) {
+      int id1 = ids.get(i);
+      int id2 = ids.get(i + 1);
+      RANDOMIZER.put(id1, id2);
+      RANDOMIZER.put(id2, id1);
+      COMPLIMENT.put(id1, id2);
+      COMPLIMENT.put(id2, id1);
+      LOGGER.info("Mapping {} <-> {}", Registries.ENTITY_TYPE.get(id1), Registries.ENTITY_TYPE.get(id2));
+    }
+
+    // If there's an odd number of entities, map the last entity to itself.
+    if (size % 2 != 0) {
+      int lastId = ids.get(size - 1);
+      RANDOMIZER.put(lastId, lastId);
+      COMPLIMENT.put(lastId, lastId);
+      LOGGER.info("Mapping {} <-> {} (self mapping)", Registries.ENTITY_TYPE.get(lastId), Registries.ENTITY_TYPE.get(lastId));
     }
   }
+
 
   private void onServerTick(MinecraftServer server) {
     if (server.getTicks() % 20 == 0) {
