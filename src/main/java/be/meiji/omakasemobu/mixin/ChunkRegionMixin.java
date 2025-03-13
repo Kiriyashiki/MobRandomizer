@@ -4,6 +4,7 @@ import be.meiji.omakasemobu.MobRandomizerMod;
 import static be.meiji.omakasemobu.MobRandomizerMod.TAG_ID;
 import static be.meiji.omakasemobu.MobRandomizerMod.createRandomizedEntity;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.mob.MobEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.world.ChunkRegion;
 import org.spongepowered.asm.mixin.Mixin;
@@ -31,6 +32,12 @@ public abstract class ChunkRegionMixin {
 
     ServerWorld world = this.toServerWorld();
 
-    return createRandomizedEntity(world, entity);
+    Entity newEntity = createRandomizedEntity(world, entity);
+
+    if (newEntity instanceof MobEntity) {
+      ((MobEntity) newEntity).setPersistent();
+    }
+
+    return newEntity;
   }
 }
