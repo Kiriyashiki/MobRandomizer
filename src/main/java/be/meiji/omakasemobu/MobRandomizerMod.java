@@ -140,6 +140,10 @@ public class MobRandomizerMod implements ModInitializer {
             if (entity != null && !entity.getCommandTags().contains(TAG_ID)
                 && MobRandomizerMod.canRandomize(entity.getType())) {
               Entity newEntity = createRandomizedEntity(world, entity);
+              
+              if (newEntity instanceof MobEntity) {
+                ((MobEntity) newEntity).setPersistent();
+              }
 
               world.spawnEntity(newEntity);
               entity.discard();
