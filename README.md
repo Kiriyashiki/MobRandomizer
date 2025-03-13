@@ -2,7 +2,7 @@
 
 A Minecraft mod that effectively randomizes mobs by remapping mob spawns.
 
-![Demo](https://assets.hainaut.xyz/vid/omakase.mp4)
+https://github.com/user-attachments/assets/b9fdf4a9-7443-4ffa-8410-e996ae62c715
 
 ## Features
 
