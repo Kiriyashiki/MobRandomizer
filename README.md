@@ -24,6 +24,8 @@ You can download the mod from [Modrinth](https://modrinth.com/mod/mobrandomizer/
 
 This mod uses Fabric and works with version 1.21.4 of Minecraft. It requires the [Fabric API](https://modrinth.com/mod/fabric-api/) to be present in the mods folder.
 
+Other Minecraft versions are available on the above download links.
+
 ## Work in Progress
 
 Older Minecraft versions may be implemented soon.
