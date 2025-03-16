@@ -73,7 +73,7 @@ public class MobRandomizerMod implements ModInitializer {
   public static Entity createRandomizedEntity(ServerWorld world, Entity entity) {
     EntityType<?> newType = randomize(entity.getType());
 
-    Entity newEntity = newType.create(world, SpawnReason.TRIGGERED);
+    Entity newEntity = newType.create(world);
     if (newEntity == null) {
       return null;
     }
