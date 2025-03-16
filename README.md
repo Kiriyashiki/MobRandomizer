@@ -14,13 +14,13 @@ Covers all types of mob spawns (natural, summoned, stuctures, ...).
 
 ## Details
 
-The randomized mappings are created at game launch. They will change everytime the game is restarted. [Will be based on world seed soon.]
+The randomized mappings are created when the world is loaded. They are based on the world seed, so using the same seed will yield the same results.
 
 Mobs that cannot spawn naturally (giant, illusioner, ...) are excluded.
 
 ## Installation
 
-You can download the mod from [Coming soon.]
+You can download the mod from [Modrinth](https://modrinth.com/mod/mobrandomizer/) or [CurseForge](https://www.curseforge.com/minecraft/mc-mods/mobrandomizer).
 
 This mod uses Fabric and works with version 1.21.4 of Minecraft. It requires the [Fabric API](https://modrinth.com/mod/fabric-api/) to be present in the mods folder.
 

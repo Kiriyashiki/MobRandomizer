@@ -19,7 +19,7 @@
     "issues" : "https://github.com/MeijiRestored/MobRandomizer/issues"
   },
 
-  "license": "MIT",
+  "license": "GNU GPL v3.0",
   "icon": "mod_icon.png",
 
   "environment": "*",
@@ -35,7 +35,9 @@
   "custom" : {
     "modmenu" : {
       "links" : {
-        "modmenu.github_releases" : "https://github.com/MeijiRestored/MobRandomizer/releases"
+        "modmenu.github_releases" : "https://github.com/MeijiRestored/MobRandomizer/releases",
+        "modmenu.curseforge": "https://www.curseforge.com/minecraft/mc-mods/mobrandomizer",
+        "modmenu.modrinth": "https://modrinth.com/mod/mobrandomizer"
       }
     }
   },
