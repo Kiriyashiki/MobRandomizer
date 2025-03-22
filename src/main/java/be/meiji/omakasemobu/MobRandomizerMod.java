@@ -78,9 +78,12 @@ public class MobRandomizerMod implements ModInitializer {
       return null;
     }
     newEntity.copyPositionAndRotation(entity);
-    if (entity instanceof MobEntity && newEntity instanceof MobEntity
-        && ((MobEntity) entity).isPersistent()) {
-      ((MobEntity) newEntity).setPersistent();
+    if (entity instanceof MobEntity && newEntity instanceof MobEntity) {
+      ((MobEntity) newEntity).initialize(world, world.getLocalDifficulty(newEntity.getBlockPos()),
+          SpawnReason.TRIGGERED, null);
+      if (((MobEntity) entity).isPersistent()) {
+        ((MobEntity) newEntity).setPersistent();
+      }
     }
     if (entity.hasVehicle()) {
       newEntity.startRiding(entity.getVehicle(), true);
@@ -114,7 +117,8 @@ public class MobRandomizerMod implements ModInitializer {
       RANDOMIZER.put(id2, id1);
       COMPLIMENT.put(id1, id2);
       COMPLIMENT.put(id2, id1);
-      LOGGER.info("Mapping {} <-> {}", Registries.ENTITY_TYPE.get(id1), Registries.ENTITY_TYPE.get(id2));
+      LOGGER.info("Mapping {} <-> {}", Registries.ENTITY_TYPE.get(id1),
+          Registries.ENTITY_TYPE.get(id2));
     }
 
     // If there's an odd number of entities, map the last entity to itself.
@@ -122,7 +126,8 @@ public class MobRandomizerMod implements ModInitializer {
       int lastId = ids.get(size - 1);
       RANDOMIZER.put(lastId, lastId);
       COMPLIMENT.put(lastId, lastId);
-      LOGGER.info("Mapping {} <-> {} (self mapping)", Registries.ENTITY_TYPE.get(lastId), Registries.ENTITY_TYPE.get(lastId));
+      LOGGER.info("Mapping {} <-> {} (self mapping)", Registries.ENTITY_TYPE.get(lastId),
+          Registries.ENTITY_TYPE.get(lastId));
     }
   }
 
@@ -140,7 +145,7 @@ public class MobRandomizerMod implements ModInitializer {
             if (entity != null && !entity.getCommandTags().contains(TAG_ID)
                 && MobRandomizerMod.canRandomize(entity.getType())) {
               Entity newEntity = createRandomizedEntity(world, entity);
-              
+
               if (newEntity instanceof MobEntity) {
                 ((MobEntity) newEntity).setPersistent();
               }
