@@ -15,6 +15,7 @@ import net.minecraft.entity.SpawnGroup;
 import net.minecraft.entity.SpawnReason;
 import net.minecraft.entity.mob.MobEntity;
 import net.minecraft.registry.Registries;
+import net.minecraft.resource.featuretoggle.FeatureFlags;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
@@ -46,8 +47,9 @@ public class MobRandomizerMod implements ModInitializer {
             .noneMatch(e -> e == entity)) {
       return true;
     }
-    return entity.getSpawnGroup() != SpawnGroup.MISC && Arrays.stream(BLACKLIST)
-        .noneMatch(e -> e == entity);
+    return entity.getSpawnGroup() != SpawnGroup.MISC && !FeatureFlags.isNotVanilla(
+        entity.getRequiredFeatures()) && Arrays.stream(BLACKLIST)
+               .noneMatch(e -> e == entity);
   }
 
   @NotNull
