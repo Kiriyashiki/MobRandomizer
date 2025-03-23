@@ -21,6 +21,6 @@ public class ServerWorldMixin {
       return entity;
     }
 
-    return createRandomizedEntity(world.toServerWorld(), entity);
+    return createRandomizedEntity(world.toServerWorld(), entity, true);
   }
 }

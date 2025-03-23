@@ -32,7 +32,7 @@ public abstract class ChunkRegionMixin {
 
     ServerWorld world = this.toServerWorld();
 
-    Entity newEntity = createRandomizedEntity(world, entity);
+    Entity newEntity = createRandomizedEntity(world, entity, false);
 
     if (newEntity instanceof MobEntity) {
       ((MobEntity) newEntity).setPersistent();

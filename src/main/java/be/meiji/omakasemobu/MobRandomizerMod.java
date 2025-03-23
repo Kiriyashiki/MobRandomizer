@@ -70,21 +70,26 @@ public class MobRandomizerMod implements ModInitializer {
     return Registries.ENTITY_TYPE.get(COMPLIMENT.get(id));
   }
 
-  public static Entity createRandomizedEntity(ServerWorld world, Entity entity) {
+  public static Entity createRandomizedEntity(ServerWorld world, Entity entity, boolean doInit) {
     EntityType<?> newType = randomize(entity.getType());
 
     Entity newEntity = newType.create(world, SpawnReason.TRIGGERED);
     if (newEntity == null) {
       return null;
     }
-    newEntity.copyPositionAndRotation(entity);
-    if (entity instanceof MobEntity && newEntity instanceof MobEntity) {
+
+    if (doInit && entity instanceof MobEntity) {
       ((MobEntity) newEntity).initialize(world, world.getLocalDifficulty(newEntity.getBlockPos()),
           SpawnReason.TRIGGERED, null);
-      if (((MobEntity) entity).isPersistent()) {
-        ((MobEntity) newEntity).setPersistent();
-      }
     }
+
+    newEntity.copyPositionAndRotation(entity);
+
+    if (entity instanceof MobEntity && newEntity instanceof MobEntity
+        && ((MobEntity) entity).isPersistent()) {
+      ((MobEntity) newEntity).setPersistent();
+    }
+
     if (entity.hasVehicle()) {
       newEntity.startRiding(entity.getVehicle(), true);
     }
@@ -137,21 +142,23 @@ public class MobRandomizerMod implements ModInitializer {
       for (ServerWorld world : server.getWorlds()) {
         for (ServerPlayerEntity player : world.getPlayers()) {
           ArrayList<Entity> entities = (ArrayList<Entity>) world.getEntitiesByClass(Entity.class,
-              new Box(player.getX() - 160, player.getY() - 160, player.getZ() - 160,
-                  player.getX() + 160, player.getY() + 160, player.getZ() + 160),
+              new Box(player.getX() - 256, player.getY() - 256, player.getZ() - 256,
+                  player.getX() + 256, player.getY() + 256, player.getZ() + 256),
               entity -> !entity.getCommandTags().contains(TAG_ID) && entity.isAlive()
                         && entity instanceof MobEntity);
           for (Entity entity : entities) {
             if (entity != null && !entity.getCommandTags().contains(TAG_ID)
                 && MobRandomizerMod.canRandomize(entity.getType())) {
-              Entity newEntity = createRandomizedEntity(world, entity);
+              Entity newEntity = createRandomizedEntity(world, entity, true);
 
               if (newEntity instanceof MobEntity) {
                 ((MobEntity) newEntity).setPersistent();
               }
 
-              world.spawnEntity(newEntity);
-              entity.discard();
+              if (newEntity != null) {
+                entity.discard();
+                world.spawnEntity(newEntity);
+              }
             }
           }
         }
