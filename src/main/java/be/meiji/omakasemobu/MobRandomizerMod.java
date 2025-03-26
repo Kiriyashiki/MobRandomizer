@@ -80,12 +80,12 @@ public class MobRandomizerMod implements ModInitializer {
       return null;
     }
 
+    newEntity.copyPositionAndRotation(entity);
+
     if (doInit && entity instanceof MobEntity) {
       ((MobEntity) newEntity).initialize(world, world.getLocalDifficulty(newEntity.getBlockPos()),
           SpawnReason.TRIGGERED, null);
     }
-
-    newEntity.copyPositionAndRotation(entity);
 
     if (entity instanceof MobEntity && newEntity instanceof MobEntity
         && ((MobEntity) entity).isPersistent()) {
