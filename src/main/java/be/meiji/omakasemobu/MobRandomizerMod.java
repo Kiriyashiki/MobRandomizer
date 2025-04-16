@@ -91,7 +91,7 @@ public class MobRandomizerMod implements ModInitializer {
 
     if (doInit && entity instanceof MobEntity) {
       ((MobEntity) newEntity).initialize(world, world.getLocalDifficulty(newEntity.getBlockPos()),
-          SpawnReason.TRIGGERED, null);
+          SpawnReason.TRIGGERED, null, null);
     }
 
     newEntity.copyPositionAndRotation(entity);
