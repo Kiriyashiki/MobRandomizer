@@ -1,14 +1,22 @@
 package be.meiji.omakasemobu;
 
+import static be.meiji.omakasemobu.util.TomlHelper.parseStringList;
+import static be.meiji.omakasemobu.util.TomlHelper.writeStringList;
+
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerWorldEvents;
+import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.SpawnGroup;
@@ -30,11 +38,13 @@ public class MobRandomizerMod implements ModInitializer {
   public static final String TAG_ID = "randomized";
   public static final Logger LOGGER = LoggerFactory.getLogger(MOD_ID);
 
-  private static final EntityType<?>[] BLACKLIST = new EntityType<?>[]{
+  private static final EntityType<?>[] DEFAULT_BLACKLIST = new EntityType<?>[]{
       EntityType.GIANT, EntityType.ENDER_DRAGON,
       EntityType.WITHER, EntityType.ILLUSIONER,
       EntityType.ZOMBIE_HORSE
   };
+
+  private static final List<EntityType<?>> blacklist = new ArrayList<>();
 
   private static final Map<Integer, Integer> RANDOMIZER = new HashMap<>();
   private static final Map<Integer, Integer> COMPLIMENT = new HashMap<>();
@@ -43,13 +53,12 @@ public class MobRandomizerMod implements ModInitializer {
   public static boolean canRandomize(EntityType<?> entity) {
     // For mobs categorized as 「misc」 even though this category is mostly non-living entities.
     if ((EntityType.VILLAGER.equals(entity) || EntityType.SNOW_GOLEM.equals(entity)
-         || EntityType.IRON_GOLEM.equals(entity)) && Arrays.stream(BLACKLIST)
+         || EntityType.IRON_GOLEM.equals(entity)) && blacklist.stream()
             .noneMatch(e -> e == entity)) {
       return true;
     }
     return entity.getSpawnGroup() != SpawnGroup.MISC && !FeatureFlags.isNotVanilla(
-        entity.getRequiredFeatures()) && Arrays.stream(BLACKLIST)
-               .noneMatch(e -> e == entity);
+        entity.getRequiredFeatures()) && blacklist.stream().noneMatch(e -> e == entity);
   }
 
   @NotNull
@@ -100,17 +109,61 @@ public class MobRandomizerMod implements ModInitializer {
     return newEntity;
   }
 
+  private static void config() {
+    String path = "%s%s%s.toml".formatted(FabricLoader.getInstance().getConfigDir(), File.separator, MOD_ID);
+    File configFile = new File(path);
+    blacklist.clear();
+
+    if (configFile.exists()) {
+      try {
+        List<String> entityNames = parseStringList(configFile, "blacklist");
+        if (entityNames != null) {
+          for (String entityName : entityNames) {
+            for (EntityType<?> entity : Registries.ENTITY_TYPE) {
+              if (entity.getUntranslatedName().equals(entityName)) {
+                blacklist.add(entity);
+              }
+            }
+          }
+          LOGGER.info("Loaded blacklist : {}", blacklist);
+          return;
+        } else {
+          LOGGER.error("The 'blacklist' key is empty in the config file. Loading default blacklist values.");
+        }
+      } catch (IOException e) {
+        LOGGER.error("Failed to read config file with error : {}\nLoading default blacklist values.", e.getMessage());
+      }
+    } else {
+      LOGGER.info("Initializing the config file...");
+
+      List<String> defaultNames = new ArrayList<>();
+      for (EntityType<?> type : DEFAULT_BLACKLIST) {
+        defaultNames.add(type.getUntranslatedName());
+      }
+
+      try {
+        writeStringList(configFile, "blacklist", defaultNames);
+      } catch (IOException e) {
+        LOGGER.error("Failed to create default config file at {}: {}", path, e.getMessage());
+      }
+    }
+
+    blacklist.addAll(Arrays.asList(DEFAULT_BLACKLIST));
+  }
+
   private void onWorldLoad(MinecraftServer server, ServerWorld world) {
+    config();
+
     ArrayList<Integer> ids = new ArrayList<>();
     RANDOMIZER.clear();
     COMPLIMENT.clear();
 
-    Registries.ENTITY_TYPE.forEach((EntityType<?> entity) -> {
+    for (EntityType<?> entity : Registries.ENTITY_TYPE) {
       if (canRandomize(entity)) {
         int id = Registries.ENTITY_TYPE.getRawId(entity);
         ids.add(id);
       }
-    });
+    }
 
     Random random = new Random(world.getSeed());
 
