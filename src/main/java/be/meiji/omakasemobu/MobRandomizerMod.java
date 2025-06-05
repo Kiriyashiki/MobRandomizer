@@ -5,7 +5,6 @@ import static be.meiji.omakasemobu.util.TomlHelper.writeStringList;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -96,9 +95,9 @@ public class MobRandomizerMod implements ModInitializer {
           SpawnReason.TRIGGERED, null);
     }
 
-    if (entity instanceof MobEntity && newEntity instanceof MobEntity
-        && ((MobEntity) entity).isPersistent()) {
-      ((MobEntity) newEntity).setPersistent();
+    if (entity instanceof MobEntity mobEntity && newEntity instanceof MobEntity newMobEntity
+        && mobEntity.isPersistent()) {
+      newMobEntity.setPersistent();
     }
 
     if (entity.hasVehicle()) {
@@ -206,8 +205,8 @@ public class MobRandomizerMod implements ModInitializer {
                 && MobRandomizerMod.canRandomize(entity.getType())) {
               Entity newEntity = createRandomizedEntity(world, entity, true);
 
-              if (newEntity instanceof MobEntity) {
-                ((MobEntity) newEntity).setPersistent();
+              if (newEntity instanceof MobEntity newMobEntity) {
+                newMobEntity.setPersistent();
               }
 
               if (newEntity != null) {
