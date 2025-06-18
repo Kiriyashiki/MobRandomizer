@@ -7,16 +7,16 @@
   "description": "Shuffled mob spawns",
   "authors" : [
     {
-      "name" : "MeijiRestored",
+      "name" : "Kiriyashiki",
       "contact" : {
         "homepage" : "https://hainaut.xyz"
       }
     }
   ],
   "contact" : {
-    "homepage" : "https://github.com/MeijiRestored/MobRandomizer",
-    "sources" : "https://github.com/MeijiRestored/MobRandomizer",
-    "issues" : "https://github.com/MeijiRestored/MobRandomizer/issues"
+    "homepage" : "https://github.com/Kiriyashiki/MobRandomizer",
+    "sources" : "https://github.com/Kiriyashiki/MobRandomizer",
+    "issues" : "https://github.com/Kiriyashiki/MobRandomizer/issues"
   },
 
   "license": "GNU GPL v3.0",
@@ -35,7 +35,7 @@
   "custom" : {
     "modmenu" : {
       "links" : {
-        "modmenu.github_releases" : "https://github.com/MeijiRestored/MobRandomizer/releases",
+        "modmenu.github_releases" : "https://github.com/Kiriyashiki/MobRandomizer/releases",
         "modmenu.curseforge": "https://www.curseforge.com/minecraft/mc-mods/mobrandomizer",
         "modmenu.modrinth": "https://modrinth.com/mod/mobrandomizer"
       }
@@ -43,9 +43,9 @@
   },
 
   "depends": {
-    "fabric-api": ">=0.119.5+1.21.5",
+    "fabric-api": ">=0.127.0+1.21.6",
     "fabricloader": ">=0.16.10",
-    "minecraft": ["1.21.5"],
+    "minecraft": ["1.21.6"],
     "java": ">=21"
   }
 }
