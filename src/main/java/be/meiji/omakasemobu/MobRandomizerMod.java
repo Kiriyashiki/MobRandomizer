@@ -52,7 +52,7 @@ public class MobRandomizerMod implements ModInitializer {
   public static boolean canRandomize(EntityType<?> entity) {
     // For mobs categorized as 「misc」 even though this category is mostly non-living entities.
     if ((EntityType.VILLAGER.equals(entity) || EntityType.SNOW_GOLEM.equals(entity)
-         || EntityType.IRON_GOLEM.equals(entity)) && blacklist.stream()
+         || EntityType.IRON_GOLEM.equals(entity) || EntityType.COPPER_GOLEM.equals(entity)) && blacklist.stream()
             .noneMatch(e -> e == entity)) {
       return true;
     }
@@ -101,7 +101,7 @@ public class MobRandomizerMod implements ModInitializer {
     }
 
     if (entity.hasVehicle()) {
-      newEntity.startRiding(entity.getVehicle(), true);
+      newEntity.startRiding(entity.getVehicle(), true, false);
     }
     newEntity.addCommandTag(TAG_ID);
 
