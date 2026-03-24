@@ -3,39 +3,39 @@ package be.meiji.omakasemobu.mixin;
 import be.meiji.omakasemobu.MobRandomizerMod;
 import static be.meiji.omakasemobu.MobRandomizerMod.TAG_ID;
 import static be.meiji.omakasemobu.MobRandomizerMod.createRandomizedEntity;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.mob.MobEntity;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.world.ChunkRegion;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.Mob;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.WorldGenRegion;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.ModifyArg;
 
-@Mixin(ChunkRegion.class)
-public abstract class ChunkRegionMixin {
+@Mixin(WorldGenRegion.class)
+public abstract class WorldGenRegionMixin {
 
   // yeah I'll have to figure this one out eventually
-  @Shadow @Deprecated public abstract ServerWorld toServerWorld();
+  @Shadow @Deprecated public abstract ServerLevel getLevel();
 
   @ModifyArg(
-      method = "spawnEntity",
+      method = "addFreshEntity",
       at = @At(
           value = "INVOKE",
-          target = "Lnet/minecraft/world/chunk/Chunk;addEntity(Lnet/minecraft/entity/Entity;)V"
+          target = "Lnet/minecraft/world/level/chunk/ChunkAccess;addEntity(Lnet/minecraft/world/entity/Entity;)V"
       )
   )
   private Entity modifyEntityArgument(Entity entity) {
-    if (entity == null || entity.getCommandTags().contains(TAG_ID) || !MobRandomizerMod.canRandomize(entity.getType())) {
+    if (entity == null || entity.entityTags().contains(TAG_ID) || !MobRandomizerMod.canRandomize(entity.getType())) {
       return entity;
     }
 
-    ServerWorld world = this.toServerWorld();
+    ServerLevel world = this.getLevel();
 
     Entity newEntity = createRandomizedEntity(world, entity, false);
 
-    if (newEntity instanceof MobEntity newMobEntity) {
-      newMobEntity.setPersistent();
+    if (newEntity instanceof Mob newMobEntity) {
+      newMobEntity.setPersistenceRequired();
     }
 
     return newEntity;

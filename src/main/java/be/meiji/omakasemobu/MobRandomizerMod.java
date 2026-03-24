@@ -14,19 +14,19 @@ import java.util.Map;
 import java.util.Random;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
-import net.fabricmc.fabric.api.event.lifecycle.v1.ServerWorldEvents;
+import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLevelEvents;
 import net.fabricmc.loader.api.FabricLoader;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.SpawnGroup;
-import net.minecraft.entity.SpawnReason;
-import net.minecraft.entity.mob.MobEntity;
-import net.minecraft.registry.Registries;
-import net.minecraft.resource.featuretoggle.FeatureFlags;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.MobCategory;
+import net.minecraft.world.entity.EntitySpawnReason;
+import net.minecraft.world.entity.Mob;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.world.flag.FeatureFlags;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.util.math.Box;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.phys.AABB;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -56,8 +56,8 @@ public class MobRandomizerMod implements ModInitializer {
             .noneMatch(e -> e == entity)) {
       return true;
     }
-    return entity.getSpawnGroup() != SpawnGroup.MISC && !FeatureFlags.isNotVanilla(
-        entity.getRequiredFeatures()) && blacklist.stream().noneMatch(e -> e == entity);
+    return entity.getCategory() != MobCategory.MISC && !FeatureFlags.isExperimental(
+        entity.requiredFeatures()) && blacklist.stream().noneMatch(e -> e == entity);
   }
 
   @NotNull
@@ -66,8 +66,8 @@ public class MobRandomizerMod implements ModInitializer {
       return entityIn;
     }
 
-    int id = Registries.ENTITY_TYPE.getRawId(entityIn);
-    return Registries.ENTITY_TYPE.get(RANDOMIZER.get(id));
+    int id = BuiltInRegistries.ENTITY_TYPE.getId(entityIn);
+    return BuiltInRegistries.ENTITY_TYPE.byId(RANDOMIZER.get(id));
   }
 
   @NotNull
@@ -76,34 +76,34 @@ public class MobRandomizerMod implements ModInitializer {
       return entityIn;
     }
 
-    int id = Registries.ENTITY_TYPE.getRawId(entityIn);
-    return Registries.ENTITY_TYPE.get(COMPLIMENT.get(id));
+    int id = BuiltInRegistries.ENTITY_TYPE.getId(entityIn);
+    return BuiltInRegistries.ENTITY_TYPE.byId(COMPLIMENT.get(id));
   }
 
-  public static Entity createRandomizedEntity(ServerWorld world, Entity entity, boolean doInit) {
+  public static Entity createRandomizedEntity(ServerLevel world, Entity entity, boolean doInit) {
     EntityType<?> newType = randomize(entity.getType());
 
-    Entity newEntity = newType.create(world, SpawnReason.TRIGGERED);
+    Entity newEntity = newType.create(world, EntitySpawnReason.TRIGGERED);
     if (newEntity == null) {
       return null;
     }
 
-    newEntity.copyPositionAndRotation(entity);
+    newEntity.copyPosition(entity);
 
-    if (doInit && entity instanceof MobEntity) {
-      ((MobEntity) newEntity).initialize(world, world.getLocalDifficulty(newEntity.getBlockPos()),
-          SpawnReason.TRIGGERED, null);
+    if (doInit && entity instanceof Mob) {
+      ((Mob) newEntity).finalizeSpawn(world, world.getCurrentDifficultyAt(newEntity.blockPosition()),
+          EntitySpawnReason.TRIGGERED, null);
     }
 
-    if (entity instanceof MobEntity mobEntity && newEntity instanceof MobEntity newMobEntity
-        && mobEntity.isPersistent()) {
-      newMobEntity.setPersistent();
+    if (entity instanceof Mob mobEntity && newEntity instanceof Mob newMobEntity
+        && mobEntity.isPersistenceRequired()) {
+      newMobEntity.setPersistenceRequired();
     }
 
-    if (entity.hasVehicle()) {
+    if (entity.isPassenger()) {
       newEntity.startRiding(entity.getVehicle(), true, false);
     }
-    newEntity.addCommandTag(TAG_ID);
+    newEntity.addTag(TAG_ID);
 
     return newEntity;
   }
@@ -118,8 +118,8 @@ public class MobRandomizerMod implements ModInitializer {
         List<String> entityNames = parseStringList(configFile, "blacklist");
         if (entityNames != null) {
           for (String entityName : entityNames) {
-            for (EntityType<?> entity : Registries.ENTITY_TYPE) {
-              if (entity.getUntranslatedName().equals(entityName)) {
+            for (EntityType<?> entity : BuiltInRegistries.ENTITY_TYPE) {
+              if (entity.toShortString().equals(entityName)) {
                 blacklist.add(entity);
               }
             }
@@ -137,7 +137,7 @@ public class MobRandomizerMod implements ModInitializer {
 
       List<String> defaultNames = new ArrayList<>();
       for (EntityType<?> type : DEFAULT_BLACKLIST) {
-        defaultNames.add(type.getUntranslatedName());
+        defaultNames.add(type.toShortString());
       }
 
       try {
@@ -150,16 +150,16 @@ public class MobRandomizerMod implements ModInitializer {
     blacklist.addAll(Arrays.asList(DEFAULT_BLACKLIST));
   }
 
-  private void onWorldLoad(MinecraftServer server, ServerWorld world) {
+  private void onWorldLoad(MinecraftServer server, ServerLevel world) {
     config();
 
     ArrayList<Integer> ids = new ArrayList<>();
     RANDOMIZER.clear();
     COMPLIMENT.clear();
 
-    for (EntityType<?> entity : Registries.ENTITY_TYPE) {
+    for (EntityType<?> entity : BuiltInRegistries.ENTITY_TYPE) {
       if (canRandomize(entity)) {
-        int id = Registries.ENTITY_TYPE.getRawId(entity);
+        int id = BuiltInRegistries.ENTITY_TYPE.getId(entity);
         ids.add(id);
       }
     }
@@ -176,8 +176,8 @@ public class MobRandomizerMod implements ModInitializer {
       RANDOMIZER.put(id2, id1);
       COMPLIMENT.put(id1, id2);
       COMPLIMENT.put(id2, id1);
-      LOGGER.info("Mapping {} <-> {}", Registries.ENTITY_TYPE.get(id1),
-          Registries.ENTITY_TYPE.get(id2));
+      LOGGER.info("Mapping {} <-> {}", BuiltInRegistries.ENTITY_TYPE.byId(id1),
+          BuiltInRegistries.ENTITY_TYPE.byId(id2));
     }
 
     // If there's an odd number of entities, map the last entity to itself.
@@ -185,33 +185,33 @@ public class MobRandomizerMod implements ModInitializer {
       int lastId = ids.get(size - 1);
       RANDOMIZER.put(lastId, lastId);
       COMPLIMENT.put(lastId, lastId);
-      LOGGER.info("Mapping {} <-> {} (self mapping)", Registries.ENTITY_TYPE.get(lastId),
-          Registries.ENTITY_TYPE.get(lastId));
+      LOGGER.info("Mapping {} <-> {} (self mapping)", BuiltInRegistries.ENTITY_TYPE.byId(lastId),
+          BuiltInRegistries.ENTITY_TYPE.byId(lastId));
     }
   }
 
 
   private void onServerTick(MinecraftServer server) {
-    if (server.getTicks() % 20 == 0) {
-      for (ServerWorld world : server.getWorlds()) {
-        for (ServerPlayerEntity player : world.getPlayers()) {
-          ArrayList<Entity> entities = (ArrayList<Entity>) world.getEntitiesByClass(Entity.class,
-              new Box(player.getX() - 256, player.getY() - 256, player.getZ() - 256,
+    if (server.getTickCount() % 20 == 0) {
+      for (ServerLevel world : server.getAllLevels()) {
+        for (ServerPlayer player : world.players()) {
+          ArrayList<Entity> entities = (ArrayList<Entity>) world.getEntitiesOfClass(Entity.class,
+              new AABB(player.getX() - 256, player.getY() - 256, player.getZ() - 256,
                   player.getX() + 256, player.getY() + 256, player.getZ() + 256),
-              entity -> !entity.getCommandTags().contains(TAG_ID) && entity.isAlive()
-                        && entity instanceof MobEntity);
+              entity -> !entity.entityTags().contains(TAG_ID) && entity.isAlive()
+                        && entity instanceof Mob);
           for (Entity entity : entities) {
-            if (entity != null && !entity.getCommandTags().contains(TAG_ID)
+            if (entity != null && !entity.entityTags().contains(TAG_ID)
                 && MobRandomizerMod.canRandomize(entity.getType())) {
               Entity newEntity = createRandomizedEntity(world, entity, true);
 
-              if (newEntity instanceof MobEntity newMobEntity) {
-                newMobEntity.setPersistent();
+              if (newEntity instanceof Mob newMobEntity) {
+                newMobEntity.setPersistenceRequired();
               }
 
               if (newEntity != null) {
                 entity.discard();
-                world.spawnEntity(newEntity);
+                world.addFreshEntity(newEntity);
               }
             }
           }
@@ -225,6 +225,6 @@ public class MobRandomizerMod implements ModInitializer {
   public void onInitialize() {
     ServerTickEvents.END_SERVER_TICK.register(this::onServerTick);
 
-    ServerWorldEvents.LOAD.register(this::onWorldLoad);
+    ServerLevelEvents.LOAD.register(this::onWorldLoad);
   }
 }
