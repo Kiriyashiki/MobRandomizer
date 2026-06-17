@@ -18,6 +18,7 @@ import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLevelEvents;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.EntityTypes;
 import net.minecraft.world.entity.MobCategory;
 import net.minecraft.world.entity.EntitySpawnReason;
 import net.minecraft.world.entity.Mob;
@@ -38,9 +39,9 @@ public class MobRandomizerMod implements ModInitializer {
   public static final Logger LOGGER = LoggerFactory.getLogger(MOD_ID);
 
   private static final EntityType<?>[] DEFAULT_BLACKLIST = new EntityType<?>[]{
-      EntityType.GIANT, EntityType.ENDER_DRAGON,
-      EntityType.WITHER, EntityType.ILLUSIONER,
-      EntityType.ZOMBIE_HORSE
+      EntityTypes.GIANT, EntityTypes.ENDER_DRAGON,
+      EntityTypes.WITHER, EntityTypes.ILLUSIONER,
+      EntityTypes.ZOMBIE_HORSE
   };
 
   private static final List<EntityType<?>> blacklist = new ArrayList<>();
@@ -51,8 +52,8 @@ public class MobRandomizerMod implements ModInitializer {
 
   public static boolean canRandomize(EntityType<?> entity) {
     // For mobs categorized as 「misc」 even though this category is mostly non-living entities.
-    if ((EntityType.VILLAGER.equals(entity) || EntityType.SNOW_GOLEM.equals(entity)
-         || EntityType.IRON_GOLEM.equals(entity) || EntityType.COPPER_GOLEM.equals(entity)) && blacklist.stream()
+    if ((EntityTypes.VILLAGER.equals(entity) || EntityTypes.SNOW_GOLEM.equals(entity)
+         || EntityTypes.IRON_GOLEM.equals(entity) || EntityTypes.COPPER_GOLEM.equals(entity)) && blacklist.stream()
             .noneMatch(e -> e == entity)) {
       return true;
     }
